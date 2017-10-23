@@ -75,6 +75,9 @@ void Physics2DDirectBodyState::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_total_linear_damp"), &Physics2DDirectBodyState::get_total_linear_damp);
 	ClassDB::bind_method(D_METHOD("get_total_angular_damp"), &Physics2DDirectBodyState::get_total_angular_damp);
 
+	ClassDB::bind_method(D_METHOD("set_center_of_mass"), &Physics2DDirectBodyState::set_center_of_mass);
+	ClassDB::bind_method(D_METHOD("get_center_of_mass"), &Physics2DDirectBodyState::get_center_of_mass);
+
 	ClassDB::bind_method(D_METHOD("get_inverse_mass"), &Physics2DDirectBodyState::get_inverse_mass);
 	ClassDB::bind_method(D_METHOD("get_inverse_inertia"), &Physics2DDirectBodyState::get_inverse_inertia);
 

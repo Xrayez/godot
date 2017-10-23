@@ -58,11 +58,18 @@ class Body2DSW : public CollisionObject2DSW {
 	real_t _inv_inertia;
 	bool user_inertia;
 
+	// Relative to the local frame of reference
+	Vector2 center_of_mass_local;
+
+	// In world orientation with local origin
+	Vector2 center_of_mass;
+
 	Vector2 gravity;
-	real_t area_linear_damp;
-	real_t area_angular_damp;
 
 	real_t still_time;
+
+	real_t area_linear_damp;
+	real_t area_angular_damp;
 
 	Vector2 applied_force;
 	real_t applied_torque;
@@ -186,6 +193,9 @@ public:
 	_FORCE_INLINE_ void set_omit_force_integration(bool p_omit_force_integration) { omit_force_integration = p_omit_force_integration; }
 	_FORCE_INLINE_ bool get_omit_force_integration() const { return omit_force_integration; }
 
+	_FORCE_INLINE_ void set_center_of_mass(const Vector2 &p_center) { center_of_mass = p_center; }
+	_FORCE_INLINE_ Vector2 get_center_of_mass() const { return center_of_mass; }
+
 	_FORCE_INLINE_ void set_linear_velocity(const Vector2 &p_velocity) { linear_velocity = p_velocity; }
 	_FORCE_INLINE_ Vector2 get_linear_velocity() const { return linear_velocity; }
 
@@ -201,13 +211,13 @@ public:
 	_FORCE_INLINE_ void apply_impulse(const Vector2 &p_offset, const Vector2 &p_impulse) {
 
 		linear_velocity += p_impulse * _inv_mass;
-		angular_velocity += _inv_inertia * p_offset.cross(p_impulse);
+		angular_velocity += _inv_inertia * (p_offset - center_of_mass).cross(p_impulse);
 	}
 
 	_FORCE_INLINE_ void apply_bias_impulse(const Vector2 &p_pos, const Vector2 &p_j) {
 
 		biased_linear_velocity += p_j * _inv_mass;
-		biased_angular_velocity += _inv_inertia * p_pos.cross(p_j);
+		biased_angular_velocity += _inv_inertia * (p_pos - center_of_mass).cross(p_j);
 	}
 
 	void set_active(bool p_active);
@@ -335,6 +345,10 @@ public:
 	virtual Vector2 get_total_gravity() const { return body->gravity; } // get gravity vector working on this body space/area
 	virtual real_t get_total_angular_damp() const { return body->area_angular_damp; } // get density of this body space/area
 	virtual real_t get_total_linear_damp() const { return body->area_linear_damp; } // get density of this body space/area
+
+
+	virtual void set_center_of_mass(const Vector2 &p_center) { body->set_center_of_mass(p_center); }
+	virtual Vector2 get_center_of_mass() const { return body->get_center_of_mass(); }
 
 	virtual real_t get_inverse_mass() const { return body->get_inv_mass(); } // get the mass
 	virtual real_t get_inverse_inertia() const { return body->get_inv_inertia(); } // get density of this body space

@@ -40,7 +40,7 @@ void Body2DSW::_update_inertia() {
 
 void Body2DSW::update_inertias() {
 
-	//update shapes and motions
+	// Update shapes and motions
 
 	switch (mode) {
 
@@ -48,7 +48,7 @@ void Body2DSW::update_inertias() {
 
 			if (user_inertia) break;
 
-			//update tensor for allshapes, not the best way but should be somehow OK. (inspired from bullet)
+			// Update tensor for all shapes, not the best way but should be somehow OK. (inspired from bullet)
 			real_t total_area = 0;
 
 			for (int i = 0; i < get_shape_count(); i++) {
@@ -56,27 +56,38 @@ void Body2DSW::update_inertias() {
 				total_area += get_shape_aabb(i).get_area();
 			}
 
-			real_t _inertia = 0;
+			// We have to recompute the center of mass
+			center_of_mass_local = Vector2(0, 0);
 
 			for (int i = 0; i < get_shape_count(); i++) {
 
-				const Shape2DSW *shape = get_shape(i);
-
 				real_t area = get_shape_aabb(i).get_area();
+				real_t mass = area * this->mass / total_area;
+				// NOTE: we assume that the shape origin is also its center of mass
+				center_of_mass_local += mass * get_shape_transform(i).get_origin();
+			}
 
+			center_of_mass_local /= mass;
+
+			// Recompute the inertia
+			real_t _inertia = 0;
+			for (int i = 0; i < get_shape_count(); i++) {
+
+				const Shape2DSW *shape = get_shape(i);
+				real_t area = get_shape_aabb(i).get_area();
 				real_t mass = area * this->mass / total_area;
 
-				Transform2D mtx = get_shape_transform(i);
-				Vector2 scale = mtx.get_scale();
-				_inertia += shape->get_moment_of_inertia(mass, scale) + mass * mtx.get_origin().length_squared();
-				//Rect2 ab = get_shape_aabb(i);
-				//_inertia+=mass*ab.size.dot(ab.size)/12.0f;
+				Transform2D shape_transform = get_shape_transform(i);
+				Vector2 scale = shape_transform.get_scale();
+				real_t shape_inertia = shape->get_moment_of_inertia(mass, scale);
+				Vector2 shape_origin = shape_transform.get_origin() - center_of_mass_local;
+				_inertia += shape_inertia + mass * shape_origin.length_squared();
 			}
 
 			if (_inertia != 0)
 				_inv_inertia = 1.0 / _inertia;
 			else
-				_inv_inertia = 0.0; //wathever
+				_inv_inertia = 0.0; //whathever
 
 			if (mass)
 				_inv_mass = 1.0 / mass;
@@ -100,6 +111,8 @@ void Body2DSW::update_inertias() {
 	//_update_inertia_tensor();
 
 	//_update_shapes();
+
+	center_of_mass = get_transform().basis_xform(center_of_mass_local);
 }
 
 void Body2DSW::set_active(bool p_active) {
