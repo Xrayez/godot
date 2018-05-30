@@ -350,6 +350,39 @@ void Camera2D::_notification(int p_what) {
 				}
 			}
 
+			if (snapping_drawing_enabled) {
+				Color snapping_drawing_color(0.5, 0.42, 0.87, 0.63);
+				float snapping_drawing_width = 1;
+				if (is_current()) {
+					// snapping_drawing_width = 3;
+					snapping_drawing_color.a = 0.83;
+				}
+
+				Transform2D inv_camera_transform = get_camera_transform().affine_inverse();
+				Size2 screen_size = get_viewport_rect().size;
+
+				Vector2 draw_offset = snapping + snapping * snapping_offset;
+				draw_offset = inv_camera_transform.xform(draw_offset);
+
+				Vector2 width(screen_size.width, 0);
+				Vector2 height(0, screen_size.height);
+
+				width = inv_camera_transform.xform(width);
+				height = inv_camera_transform.xform(height);
+
+				Transform2D inv_transform = get_global_transform().affine_inverse(); // undo global space
+				draw_set_transform_matrix(inv_transform);
+
+				for (Vector2 p(draw_offset.x, 0); p.x <= width.x; p.x += draw_offset.x) {
+
+					draw_line(p, p + height, snapping_drawing_color, snapping_drawing_width);
+				}
+				for (Vector2 p(draw_offset.y, 0); p.y <= height.y; p.y += draw_offset.y) {
+
+					draw_line(p + width, p, snapping_drawing_color, snapping_drawing_width);
+				}
+			}
+
 		} break;
 	}
 }
@@ -546,7 +579,10 @@ Vector2 Camera2D::get_snapping_offset() const {
 
 void Camera2D::set_snapping_value(const Vector2 &p_snapping) {
 
-	snapping = p_snapping.abs();
+	snapping = p_snapping;
+
+	if(snapping.x <= 0.0) { snapping.x = 0.01; }
+	if(snapping.y <= 0.0) { snapping.y = 0.01; }
 }
 
 Vector2 Camera2D::get_snapping_value() const {
@@ -680,6 +716,15 @@ bool Camera2D::is_margin_drawing_enabled() const {
 	return margin_drawing_enabled;
 }
 
+void Camera2D::set_snapping_drawing_enabled(bool enable) {
+	snapping_drawing_enabled = enable;
+	update();
+}
+
+bool Camera2D::is_snapping_drawing_enabled() const {
+	return snapping_drawing_enabled;
+}
+
 void Camera2D::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("set_offset", "offset"), &Camera2D::set_offset);
@@ -760,6 +805,9 @@ void Camera2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_margin_drawing_enabled", "margin_drawing_enabled"), &Camera2D::set_margin_drawing_enabled);
 	ClassDB::bind_method(D_METHOD("is_margin_drawing_enabled"), &Camera2D::is_margin_drawing_enabled);
 
+	ClassDB::bind_method(D_METHOD("set_snapping_drawing_enabled", "snapping_drawing_enabled"), &Camera2D::set_snapping_drawing_enabled);
+	ClassDB::bind_method(D_METHOD("is_snapping_drawing_enabled"), &Camera2D::is_snapping_drawing_enabled);
+
 	ADD_PROPERTYNZ(PropertyInfo(Variant::VECTOR2, "offset"), "set_offset", "get_offset");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "anchor_mode", PROPERTY_HINT_ENUM, "Fixed TopLeft,Drag Center"), "set_anchor_mode", "get_anchor_mode");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "rotating"), "set_rotating", "is_rotating");
@@ -801,6 +849,7 @@ void Camera2D::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "editor_draw_screen"), "set_screen_drawing_enabled", "is_screen_drawing_enabled");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "editor_draw_limits"), "set_limit_drawing_enabled", "is_limit_drawing_enabled");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "editor_draw_drag_margin"), "set_margin_drawing_enabled", "is_margin_drawing_enabled");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "editor_draw_snapping"), "set_snapping_drawing_enabled", "is_snapping_drawing_enabled");
 
 	BIND_ENUM_CONSTANT(ANCHOR_MODE_FIXED_TOP_LEFT);
 	BIND_ENUM_CONSTANT(ANCHOR_MODE_DRAG_CENTER);
@@ -837,6 +886,7 @@ Camera2D::Camera2D() {
 	screen_drawing_enabled = true;
 	limit_drawing_enabled = false;
 	margin_drawing_enabled = false;
+	snapping_drawing_enabled = false;
 
 	h_drag_enabled = true;
 	v_drag_enabled = true;

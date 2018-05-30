@@ -91,6 +91,7 @@ protected:
 	bool screen_drawing_enabled;
 	bool limit_drawing_enabled;
 	bool margin_drawing_enabled;
+	bool snapping_drawing_enabled;
 
 protected:
 	virtual Transform2D get_camera_transform();
@@ -168,6 +169,9 @@ public:
 
 	void set_margin_drawing_enabled(bool enable);
 	bool is_margin_drawing_enabled() const;
+
+	void set_snapping_drawing_enabled(bool enable);
+	bool is_snapping_drawing_enabled() const;
 
 	Camera2D();
 };
