@@ -56,8 +56,12 @@ public:
 	static SavePNGFunc save_png_func;
 
 	enum {
-		MAX_WIDTH = 16384, // force a limit somehow
-		MAX_HEIGHT = 16384 // force a limit somehow
+		MAX_WIDTH = 32768, // limit for storage
+		MAX_HEIGHT = 32768
+	};
+	enum {
+		MAX_TEXTURE_WIDTH = 16384, // reasonable limit for textures
+		MAX_TEXTURE_HEIGHT = 16384
 	};
 
 	enum Format {

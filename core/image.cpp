@@ -1598,6 +1598,12 @@ void Image::create(int p_width, int p_height, bool p_use_mipmaps, Format p_forma
 	ERR_FAIL_INDEX(p_width - 1, MAX_WIDTH);
 	ERR_FAIL_INDEX(p_height - 1, MAX_HEIGHT);
 
+#ifdef DEBUG_ENABLED
+	if (p_width - 1 > MAX_TEXTURE_WIDTH || p_height - 1 > MAX_TEXTURE_HEIGHT) {
+		WARN_PRINTS("The image exceeds maximum texture size limit and may not be rendered on screen. Ignore this if importing as Image.");
+	}
+#endif
+
 	int mm = 0;
 	int size = _get_dst_image_size(p_width, p_height, p_format, mm, p_use_mipmaps ? -1 : 0);
 	data.resize(size);
@@ -1616,6 +1622,12 @@ void Image::create(int p_width, int p_height, bool p_use_mipmaps, Format p_forma
 
 	ERR_FAIL_INDEX(p_width - 1, MAX_WIDTH);
 	ERR_FAIL_INDEX(p_height - 1, MAX_HEIGHT);
+
+#ifdef DEBUG_ENABLED
+	if (p_width - 1 > MAX_TEXTURE_WIDTH || p_height - 1 > MAX_TEXTURE_HEIGHT) {
+		WARN_PRINTS("The image exceeds maximum texture size limit and may not be rendered on screen. Ignore this if importing as Image.");
+	}
+#endif
 
 	int mm;
 	int size = _get_dst_image_size(p_width, p_height, p_format, mm, p_use_mipmaps ? -1 : 0);
@@ -2796,6 +2808,9 @@ void Image::_bind_methods() {
 
 	BIND_CONSTANT(MAX_WIDTH);
 	BIND_CONSTANT(MAX_HEIGHT);
+
+	BIND_CONSTANT(MAX_TEXTURE_WIDTH);
+	BIND_CONSTANT(MAX_TEXTURE_HEIGHT);
 
 	BIND_ENUM_CONSTANT(FORMAT_L8); //luminance
 	BIND_ENUM_CONSTANT(FORMAT_LA8); //luminance-alpha
