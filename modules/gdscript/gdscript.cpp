@@ -111,9 +111,20 @@ GDScriptInstance *GDScript::_create_instance(const Variant **p_args, int p_argco
 	GDScriptLanguage::singleton->lock->unlock();
 #endif
 
-	initializer->call(instance, p_args, p_argcount, r_error);
+	const int init_argc = initializer->get_argument_count();
+	const int init_def_argc = initializer->get_default_argument_count();
 
-	if (r_error.error != Variant::CallError::CALL_OK) {
+	bool safe_construct =
+			init_argc == 0 // nothing to pass
+			|| ((init_argc - init_def_argc) == p_argcount) // enough args
+			|| (init_argc == init_def_argc); // all have defaults
+
+	if (safe_construct) {
+		initializer->call(instance, p_args, p_argcount, r_error);
+	}
+	if (safe_construct && r_error.error != Variant::CallError::CALL_OK) {
+		// Despite manually validated initializer arguments, something went
+		// wrong during initializer call, so we better clean up now
 		instance->script = Ref<GDScript>();
 		instance->owner->set_script_instance(NULL);
 #ifndef NO_THREADS
@@ -123,10 +134,8 @@ GDScriptInstance *GDScript::_create_instance(const Variant **p_args, int p_argco
 #ifndef NO_THREADS
 		GDScriptLanguage::singleton->lock->unlock();
 #endif
-
-		ERR_FAIL_COND_V(r_error.error != Variant::CallError::CALL_OK, NULL); //error constructing
+		ERR_FAIL_V_MSG(NULL, "Error constructing a GDScriptInstance.");
 	}
-
 	//@TODO make thread safe
 	return instance;
 }
