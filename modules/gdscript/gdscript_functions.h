@@ -126,6 +126,7 @@ public:
 		INSTANCE_FROM_ID,
 		LEN,
 		IS_INSTANCE_VALID,
+		ANIMATE,
 		FUNC_MAX
 	};
 

@@ -40,6 +40,12 @@
 #include "core/variant_parser.h"
 #include "gdscript.h"
 
+#include "scene/animation/tween.h"
+#include "scene/main/scene_tree.h"
+#include "scene/main/viewport.h"
+
+#include "core/method_bind_ext.gen.inc"
+
 const char *GDScriptFunctions::get_func_name(Function p_func) {
 
 	ERR_FAIL_INDEX_V(p_func, FUNC_MAX, "");
@@ -135,6 +141,7 @@ const char *GDScriptFunctions::get_func_name(Function p_func) {
 		"instance_from_id",
 		"len",
 		"is_instance_valid",
+		"animate",
 	};
 
 	return _names[p_func];
@@ -1453,6 +1460,32 @@ void GDScriptFunctions::call(Function p_func, const Variant **p_args, int p_arg_
 			}
 
 		} break;
+		case ANIMATE: {
+
+			VALIDATE_ARG_COUNT(5);
+
+			Object *obj = *p_args[0];
+			NodePath property = *p_args[1];
+			Variant initial_val = *p_args[2];
+			Variant final_val = *p_args[3];
+			real_t duration = *p_args[4];
+
+			// Tween::TransitionType trans = *p_args[5];
+			// Tween::EaseType ease = *p_args[6];
+			// real_t delay = *p_args[7];
+
+			Tween::TransitionType trans_type = Tween::TransitionType::TRANS_LINEAR;
+			Tween::EaseType ease_type = Tween::EaseType::EASE_IN_OUT;
+			real_t delay = 0.0;
+
+			Tween *tween = memnew(Tween);
+			SceneTree::get_singleton()->get_root()->call_deferred("add_child", tween);
+
+			tween->interpolate_property(obj, property, initial_val, final_val, duration, trans_type, ease_type, delay);
+			tween->call_deferred("start");
+
+			r_ret = tween;
+		} break;
 		case FUNC_MAX: {
 
 			ERR_FAIL();
@@ -2055,6 +2088,27 @@ MethodInfo GDScriptFunctions::get_info(Function p_func) {
 		case IS_INSTANCE_VALID: {
 			MethodInfo mi("is_instance_valid", PropertyInfo(Variant::OBJECT, "instance"));
 			mi.return_val.type = Variant::BOOL;
+			return mi;
+		} break;
+		case ANIMATE: {
+			MethodInfo mi("animate",
+					PropertyInfo(Variant::OBJECT, "object"),
+					PropertyInfo(Variant::NODE_PATH, "property"),
+					PropertyInfo(Variant::NIL, "initial_value", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_NIL_IS_VARIANT),
+					PropertyInfo(Variant::NIL, "final_value", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_NIL_IS_VARIANT),
+					PropertyInfo(Variant::REAL, "duration"));
+			// 		NOTE: MethodInfo doesn't provide overrides for more than 5 args...
+			// 		PropertyInfo(Variant::INT, "transition_type"),
+			// 		PropertyInfo(Variant::INT, "ease_type"),
+			// 		PropertyInfo(Variant::REAL, "delay"));
+
+			// mi.default_arguments.push_back(Tween::TransitionType::TRANS_LINEAR);
+			// mi.default_arguments.push_back(Tween::EaseType::EASE_IN_OUT);
+			// mi.default_arguments.push_back(0.0);
+
+			// mi.return_val.type = Variant::NIL;
+			// mi.return_val.usage |= PROPERTY_USAGE_NIL_IS_VARIANT;
+			mi.return_val.type = Variant::OBJECT;
 			return mi;
 		} break;
 		case FUNC_MAX: {
