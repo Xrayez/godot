@@ -227,6 +227,13 @@
 				Returns [code]true[/code] if you are pressing the action event. Note that if an action has multiple buttons assigned and more than one of them is pressed, releasing one button will release the action, even if some other button assigned to this action is still pressed.
 			</description>
 		</method>
+		<method name="is_anything_pressed" qualifiers="const">
+			<return type="bool">
+			</return>
+			<description>
+				Returns [code]true[/code] if there is any action, key, joypad, or mouse button are being pressed. This will also return [code]true[/code] if any action is simulated via code by calling [method action_press].
+			</description>
+		</method>
 		<method name="is_joy_button_pressed" qualifiers="const">
 			<return type="bool">
 			</return>

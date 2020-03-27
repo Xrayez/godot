@@ -142,6 +142,7 @@ Input::MouseMode Input::get_mouse_mode() const {
 }
 
 void Input::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("is_anything_pressed"), &Input::is_anything_pressed);
 	ClassDB::bind_method(D_METHOD("is_key_pressed", "keycode"), &Input::is_key_pressed);
 	ClassDB::bind_method(D_METHOD("is_mouse_button_pressed", "button"), &Input::is_mouse_button_pressed);
 	ClassDB::bind_method(D_METHOD("is_joy_button_pressed", "device", "button"), &Input::is_joy_button_pressed);
@@ -266,6 +267,19 @@ Input::SpeedTrack::SpeedTrack() {
 	min_ref_frame = 0.1;
 	max_ref_frame = 0.3;
 	reset();
+}
+
+bool Input::is_anything_pressed() const {
+	_THREAD_SAFE_METHOD_
+
+	for (Map<StringName, Input::Action>::Element *E = action_state.front(); E; E = E->next()) {
+		if (E->get().pressed) {
+			return true;
+		}
+	}
+	return !keys_pressed.empty() ||
+		   !joy_buttons_pressed.empty() ||
+		   mouse_button_mask > 0;
 }
 
 bool Input::is_key_pressed(int p_keycode) const {
