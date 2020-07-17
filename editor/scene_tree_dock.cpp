@@ -984,6 +984,7 @@ void SceneTreeDock::_tool_selected(int p_tool, bool p_confirm_override) {
 		} break;
 		case TOOL_CREATE_2D_SCENE:
 		case TOOL_CREATE_3D_SCENE:
+		case TOOL_CREATE_SCENE:
 		case TOOL_CREATE_USER_INTERFACE:
 		case TOOL_CREATE_FAVORITE: {
 
@@ -1010,6 +1011,7 @@ void SceneTreeDock::_tool_selected(int p_tool, bool p_confirm_override) {
 				switch (p_tool) {
 					case TOOL_CREATE_2D_SCENE: new_node = memnew(Node2D); break;
 					case TOOL_CREATE_3D_SCENE: new_node = memnew(Spatial); break;
+					case TOOL_CREATE_SCENE: new_node = memnew(Node); break;
 					case TOOL_CREATE_USER_INTERFACE: {
 						Control *node = memnew(Control);
 						node->set_anchors_and_margins_preset(PRESET_WIDE); //more useful for resizable UIs.
@@ -1128,6 +1130,11 @@ void SceneTreeDock::_notification(int p_what) {
 			button_3d->set_text(TTR("3D Scene"));
 			button_3d->set_icon(get_icon("Spatial", "EditorIcons"));
 			button_3d->connect("pressed", this, "_tool_selected", make_binds(TOOL_CREATE_3D_SCENE, false));
+			Button *button_scene = memnew(Button);
+			beginner_node_shortcuts->add_child(button_scene);
+			button_scene->set_text(TTR("Scene"));
+			button_scene->set_icon(get_icon("Node", "EditorIcons"));
+			button_scene->connect("pressed", this, "_tool_selected", make_binds(TOOL_CREATE_SCENE, false));
 
 			Button *button_ui = memnew(Button);
 			beginner_node_shortcuts->add_child(button_ui);
