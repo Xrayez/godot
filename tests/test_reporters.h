@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  test_macros.h                                                        */
+/*  test_reporters.h                                                     */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           GODOT ENGINE                                */
@@ -28,29 +28,40 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#ifndef TEST_MACROS_H
-#define TEST_MACROS_H
+#ifndef TEST_REPORTERS_H
+#define TEST_REPORTERS_H
 
-// See documentation for doctest at:
-// https://github.com/onqtam/doctest/blob/master/doc/markdown/readme.md#reference
-#include "thirdparty/doctest/doctest.h"
+#include "test_macros.h"
 
-// The test is skipped with this, run pending tests with `--test --no-skip`.
-#define TEST_CASE_PENDING(name) TEST_CASE(name *doctest::skip())
+// NOTE: we need make sure to re-enable Godot error prints with `ERR_PRINT_ON`
+// automatically in case of a human error or other unexpected failures.
 
-// Temporarily disable error prints to test failure paths.
-// This allows to avoid polluting the test summary with error messages.
-//
-// The `_print_error_enabled` boolean is defined in `core/print_string.cpp` and
-// works at global scope. It's used by various loggers in `should_log()` method,
-// which are used by error macros which call into `OS::print_error`, effectively
-// disabling any error messages to be printed from the engine side (not tests).
-//
-#define ERR_PRINT_OFF _print_error_enabled = false;
-//
-// NOTE: This is always re-enabled before each test case or subcase is run if
-// using "godot_console" test reporter (default).
-//
-#define ERR_PRINT_ON _print_error_enabled = true;
+struct GodotConsoleReporter : public doctest::ConsoleReporter {
+	GodotConsoleReporter(const doctest::ContextOptions &co) :
+			doctest::ConsoleReporter(co) {}
 
-#endif // TEST_MACROS_H
+	void test_run_start() override {
+		ERR_PRINT_ON;
+		ConsoleReporter::test_run_start();
+	}
+	void test_case_start(const doctest::TestCaseData &p_in) override {
+		ERR_PRINT_ON;
+		ConsoleReporter::test_case_start(p_in);
+	}
+	void test_case_reenter(const doctest::TestCaseData &p_in) override {
+		ERR_PRINT_ON;
+		ConsoleReporter::test_case_reenter(p_in);
+	}
+	void test_case_exception(const doctest::TestCaseException &p_in) override {
+		ERR_PRINT_ON;
+		ConsoleReporter::test_case_exception(p_in);
+	}
+	void subcase_start(const doctest::SubcaseSignature &p_in) override {
+		ERR_PRINT_ON;
+		ConsoleReporter::subcase_start(p_in);
+	}
+};
+
+REGISTER_REPORTER("godot_console", 1, GodotConsoleReporter);
+
+#endif // TEST_REPORTERS_H

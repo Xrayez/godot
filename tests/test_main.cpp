@@ -50,7 +50,7 @@
 
 #include "modules/modules_tests.gen.h"
 
-#include "tests/test_macros.h"
+#include "test_reporters.h"
 
 int test_main(int argc, char *argv[]) {
 	// Doctest runner.
@@ -75,12 +75,15 @@ int test_main(int argc, char *argv[]) {
 		// Copy this into memory.
 		std::memcpy(args[x], str, strlen(str) + 1);
 	}
-
-	test_context.applyCommandLine(valid_arguments.size(), args);
-
+	// Setup default values.
 	test_context.setOption("order-by", "name");
 	test_context.setOption("abort-after", 5);
 	test_context.setOption("no-breaks", true);
+	// Use Godot version of console reporter (registered in `test_reporters.h`).
+	test_context.setOption("reporters", "godot_console"); // Default: "console".
+
+	// Command-line options can override defaults.
+	test_context.applyCommandLine(valid_arguments.size(), args);
 
 	delete[] args;
 
