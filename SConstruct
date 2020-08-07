@@ -124,6 +124,7 @@ opts.Add(BoolVariable("use_precise_math_checks", "Math checks use very precise e
 opts.Add(BoolVariable("deprecated", "Enable deprecated features", True))
 opts.Add(BoolVariable("minizip", "Enable ZIP archive support using minizip", True))
 opts.Add(BoolVariable("xaudio2", "Enable the XAudio2 audio driver", False))
+opts.Add(BoolVariable("modules_enabled_by_default", "Enable or disable all modules to build by default", True))
 opts.Add("custom_modules", "A list of comma-separated directory paths containing custom modules to build.", "")
 
 # Advanced options
@@ -209,7 +210,7 @@ for path in module_search_paths:
 
 # Add module options.
 for name, path in modules_detected.items():
-    enabled = True
+    enabled = env_base["modules_enabled_by_default"]
     sys.path.insert(0, path)
     import config
 
