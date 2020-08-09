@@ -51,11 +51,13 @@
 
 #include "modules/modules_tests.gen.h"
 
-#include "tests/test_macros.h"
+#define DOCTEST_CONFIG_IMPLEMENT
+#include "thirdparty/doctest/doctest.h"
+#undef DOCTEST_CONFIG_IMPLEMENT
+
+#include "tests/test_context.h"
 
 int test_main(int argc, char *argv[]) {
-	// Doctest runner.
-	doctest::Context test_context;
 	List<String> valid_arguments;
 
 	// Clean arguments of "--test" from the args.
@@ -78,16 +80,48 @@ int test_main(int argc, char *argv[]) {
 		std::memcpy(args[x], str, strlen(str) + 1);
 	}
 
-	test_context.applyCommandLine(valid_arguments.size(), args);
-
-	test_context.setOption("order-by", "name");
-	test_context.setOption("abort-after", 5);
-	test_context.setOption("no-breaks", true);
+	doctest::Context doctest;
+	doctest.setOption("order-by", "name");
+	doctest.setOption("abort-after", 5);
+	doctest.setOption("no-breaks", true);
+	doctest.applyCommandLine(valid_arguments.size(), args);
 
 	for (int x = 0; x < valid_arguments.size(); x++) {
 		delete[] args[x];
 	}
 	delete[] args;
 
-	return test_context.run();
+	// Tests::Context test_context;
+	// test_context.runner = &doctest;
+	// Tests::add_context(test_context, "[Core]");
+
+	int result = Tests::run();
+
+	// // Run test cases which require specific engine
+	// // initialization and cleanup procedures.
+	// const Map<String, TestFunc> &function = Tests::get_contexts();
+	// Vector<String> test_cases_run;
+	// for (auto *E = function.front(); E; E = E->next()) {
+	// 	const TestFunc test_setup = E->get();
+	// 	test_setup();
+	// 	String test_case = vformat("*%s*", E->key());
+	// 	test_context.setOption("test-case", test_case.utf8().get_data());
+	// 	test_cases_run.push_back(test_case);
+	// 	result = test_context.run();
+	// }
+	// // Run everything else that doesn't require setup nor teardown
+	// // be excluding previous test cases.
+	// doctest::Context test_context_misc;
+	// String filter_exclude;
+
+	// for (int i = 0; i < test_cases_run.size(); ++i) {
+	// 	filter_exclude += vformat("*%s*", test_cases_run[i]);
+	// 	if (i < test_cases_run.size() - 1) {
+	// 		filter_exclude += ",";
+	// 	}
+	// }
+	// test_context_misc.setOption("test-case-exclude", filter_exclude.utf8().get_data());
+	// result = test_context_misc.run();
+
+	return result;
 }

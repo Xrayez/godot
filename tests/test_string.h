@@ -48,6 +48,10 @@
 
 namespace TestString {
 
+TEST_SETUP("[String]") {
+	print_line("[String] !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+}
+
 TEST_CASE("[String] Assign from cstr") {
 	String s = "Hello";
 	CHECK(wcscmp(s.c_str(), L"Hello") == 0);

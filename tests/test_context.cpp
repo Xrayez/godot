@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  test_macros.h                                                        */
+/*  test_context.cpp                                                     */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           GODOT ENGINE                                */
@@ -28,47 +28,58 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#ifndef TEST_MACROS_H
-#define TEST_MACROS_H
-
-// See documentation for doctest at:
-// https://github.com/onqtam/doctest/blob/master/doc/markdown/readme.md#reference
-#include "thirdparty/doctest/doctest.h"
-
 #include "tests/test_context.h"
+#include "core/variant.h" // For vformat().
 
-#define TEST_SETUP(m_filter)                        \
-	TEST_CREATE_AND_REGISTER_FUNCTION(              \
-			DOCTEST_ANONYMOUS(_DOCTEST_ANON_FUNC_), \
-			Tests::FuncType::TYPE_SETUP,            \
-			m_filter)
+HashMap<String, Tests::Context> Tests::contexts = HashMap<String, Context>();
+HashMap<String, TestFunc> Tests::setup_functions = HashMap<String, TestFunc>();
+HashMap<String, TestFunc> Tests::cleanup_functions = HashMap<String, TestFunc>();
 
-#define TEST_CLEANUP(m_filter)                      \
-	TEST_CREATE_AND_REGISTER_FUNCTION(              \
-			DOCTEST_ANONYMOUS(_DOCTEST_ANON_FUNC_), \
-			Tests::FuncType::TYPE_CLEANUP,          \
-			m_filter)
+int Tests::register_function(TestFunc p_function, FuncType p_type, String p_filter) {
+	// Contexts are created automatically based on filter.
+	if (!contexts.has(p_filter)) {
+		Context ct;
+		ct.runner = new doctest::Context;
+		contexts[p_filter] = ct;
+	}
 
-#define TEST_CREATE_AND_REGISTER_FUNCTION(m_function, m_type, m_filter) \
-	static void m_function();                                           \
-	TEST_REGISTER_FUNCTION(m_function, m_type, m_filter)                \
-	static void m_function()
+	switch (p_type) {
+		case FuncType::TYPE_SETUP: {
+			// setup_functions[p_filter] = p_function;
+			contexts[p_filter].setup.function = p_function;
+			contexts[p_filter].setup.type = FuncType::TYPE_SETUP;
+		} break;
+		case FuncType::TYPE_CLEANUP: {
+			// cleanup_functions[p_filter] = p_function;
+			contexts[p_filter].cleanup.function = p_function;
+			contexts[p_filter].cleanup.type = FuncType::TYPE_CLEANUP;
+		} break;
+	}
+	return 0;
+}
 
-#define TEST_REGISTER_FUNCTION(m_function, m_type, m_filter)            \
-	DOCTEST_GLOBAL_NO_WARNINGS(DOCTEST_ANONYMOUS(_DOCTEST_ANON_VAR_)) = \
-			Tests::register_function(m_function, m_type, m_filter);     \
-	DOCTEST_GLOBAL_NO_WARNINGS_END()
+int Tests::run() {
+	int result = 0;
 
-// The test is skipped with this, run pending tests with `--test --no-skip`.
-#define TEST_CASE_PENDING(name) TEST_CASE(name *doctest::skip())
+	const String *k = nullptr;
 
-// Temporarily disable error prints to test failure paths.
-// This allows to avoid polluting the test summary with error messages.
-// The `_print_error_enabled` boolean is defined in `core/print_string.cpp` and
-// works at global scope. It's used by various loggers in `should_log()` method,
-// which are used by error macros which call into `OS::print_error`, effectively
-// disabling any error messages to be printed from the engine side (not tests).
-#define ERR_PRINT_OFF _print_error_enabled = false;
-#define ERR_PRINT_ON _print_error_enabled = true;
+	while ((k = contexts.next(k))) {
+		Context &ct = contexts[*k];
+		// Setup.
+		if (ct.setup.function) {
+			ct.setup.function();
+		}
 
-#endif // TEST_MACROS_H
+		// Run, set scope of test cases using the filter.
+		ct.runner->clearFilters();
+		String test_cases = vformat("*%s*", *k);
+		ct.runner->addFilter("test-case", test_cases.utf8().get_data());
+		result |= ct.runner->run();
+
+		// Cleanup.
+		if (ct.cleanup.function) {
+			ct.cleanup.function();
+		}
+	}
+	return result;
+}

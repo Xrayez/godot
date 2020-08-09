@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  test_macros.h                                                        */
+/*  test_context.h                                                       */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           GODOT ENGINE                                */
@@ -28,47 +28,51 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#ifndef TEST_MACROS_H
-#define TEST_MACROS_H
+#ifndef TEST_CONTEXT_H
+#define TEST_CONTEXT_H
 
-// See documentation for doctest at:
-// https://github.com/onqtam/doctest/blob/master/doc/markdown/readme.md#reference
+#include "core/hash_map.h"
+#include "core/ustring.h"
+
 #include "thirdparty/doctest/doctest.h"
 
-#include "tests/test_context.h"
+typedef void (*TestFunc)();
 
-#define TEST_SETUP(m_filter)                        \
-	TEST_CREATE_AND_REGISTER_FUNCTION(              \
-			DOCTEST_ANONYMOUS(_DOCTEST_ANON_FUNC_), \
-			Tests::FuncType::TYPE_SETUP,            \
-			m_filter)
+class Tests {
+public:
+	enum FuncType {
+		TYPE_SETUP,
+		TYPE_CLEANUP,
+	};
+	struct FuncData {
+		TestFunc function = nullptr;
+		FuncType type;
+		String filter;
+	};
+	struct Context {
+		FuncData setup;
+		doctest::Context *runner = nullptr;
+		FuncData cleanup;
+	};
 
-#define TEST_CLEANUP(m_filter)                      \
-	TEST_CREATE_AND_REGISTER_FUNCTION(              \
-			DOCTEST_ANONYMOUS(_DOCTEST_ANON_FUNC_), \
-			Tests::FuncType::TYPE_CLEANUP,          \
-			m_filter)
+private:
+	static HashMap<String, TestFunc> setup_functions; // key: test case filter.
+	static HashMap<String, TestFunc> cleanup_functions; // key: test case filter.
+	static HashMap<String, Context> contexts; // key: test case filter.
 
-#define TEST_CREATE_AND_REGISTER_FUNCTION(m_function, m_type, m_filter) \
-	static void m_function();                                           \
-	TEST_REGISTER_FUNCTION(m_function, m_type, m_filter)                \
-	static void m_function()
+public:
+	// Context.
+	static void add_context(Context p_context, String p_filter) {
+		contexts[p_filter] = p_context;
+	}
+	static HashMap<String, Context> &get_contexts() { return contexts; }
+	static void clear_contexts() { contexts.clear(); }
 
-#define TEST_REGISTER_FUNCTION(m_function, m_type, m_filter)            \
-	DOCTEST_GLOBAL_NO_WARNINGS(DOCTEST_ANONYMOUS(_DOCTEST_ANON_VAR_)) = \
-			Tests::register_function(m_function, m_type, m_filter);     \
-	DOCTEST_GLOBAL_NO_WARNINGS_END()
+	// Needed by test macros for dynamic initialization.
+	static int register_function(TestFunc p_function, FuncType p_type, String p_filter);
 
-// The test is skipped with this, run pending tests with `--test --no-skip`.
-#define TEST_CASE_PENDING(name) TEST_CASE(name *doctest::skip())
+	// Run all tests.
+	static int run();
+};
 
-// Temporarily disable error prints to test failure paths.
-// This allows to avoid polluting the test summary with error messages.
-// The `_print_error_enabled` boolean is defined in `core/print_string.cpp` and
-// works at global scope. It's used by various loggers in `should_log()` method,
-// which are used by error macros which call into `OS::print_error`, effectively
-// disabling any error messages to be printed from the engine side (not tests).
-#define ERR_PRINT_OFF _print_error_enabled = false;
-#define ERR_PRINT_ON _print_error_enabled = true;
-
-#endif // TEST_MACROS_H
+#endif // TEST_CONTEXT_H
