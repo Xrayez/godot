@@ -54,9 +54,9 @@
 	TEST_REGISTER_FUNCTION(m_function, m_type, m_filter)                \
 	static void m_function()
 
-#define TEST_REGISTER_FUNCTION(m_function, m_type, m_filter)            \
-	DOCTEST_GLOBAL_NO_WARNINGS(DOCTEST_ANONYMOUS(_DOCTEST_ANON_VAR_)) = \
-			Tests::register_function(m_function, m_type, m_filter);     \
+#define TEST_REGISTER_FUNCTION(m_function, m_type, m_filter)                \
+	DOCTEST_GLOBAL_NO_WARNINGS(DOCTEST_ANONYMOUS(_DOCTEST_ANON_VAR_)) =     \
+			Tests::register_context_function(m_function, m_type, m_filter); \
 	DOCTEST_GLOBAL_NO_WARNINGS_END()
 
 // The test is skipped with this, run pending tests with `--test --no-skip`.

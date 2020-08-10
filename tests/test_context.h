@@ -32,6 +32,7 @@
 #define TEST_CONTEXT_H
 
 #include "core/hash_map.h"
+#include "core/map.h"
 #include "core/ustring.h"
 
 #include "thirdparty/doctest/doctest.h"
@@ -51,28 +52,31 @@ public:
 	};
 	struct Context {
 		FuncData setup;
-		doctest::Context *runner = nullptr;
+		String filter;
 		FuncData cleanup;
 	};
 
 private:
-	static HashMap<String, TestFunc> setup_functions; // key: test case filter.
-	static HashMap<String, TestFunc> cleanup_functions; // key: test case filter.
-	static HashMap<String, Context> contexts; // key: test case filter.
+	static Map<String, Context> *contexts; // Key: test case filter.
+	static char **args; // From command line.
+	static int arg_count;
 
 public:
-	// Context.
-	static void add_context(Context p_context, String p_filter) {
-		contexts[p_filter] = p_context;
-	}
-	static HashMap<String, Context> &get_contexts() { return contexts; }
-	static void clear_contexts() { contexts.clear(); }
+	static void handle_cmdline_args(int argc, char *argv[]);
 
-	// Needed by test macros for dynamic initialization.
-	static int register_function(TestFunc p_function, FuncType p_type, String p_filter);
+	// Context.
+	static void add_context(const Context &p_context, String p_filter = "");
+	static Map<String, Context> *get_contexts() { return contexts; }
+	static void clear_contexts();
+
+	// Needed by test macros for dynamic initialization
+	// of setup and cleanup functions for the test runner.
+	static int register_context_function(TestFunc p_function, FuncType p_type, String p_filter);
 
 	// Run all tests.
 	static int run();
+
+	static void cleanup();
 };
 
 #endif // TEST_CONTEXT_H
