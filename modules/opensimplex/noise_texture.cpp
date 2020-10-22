@@ -151,6 +151,7 @@ Ref<Image> NoiseTexture::_generate_texture() {
 	if (as_normalmap) {
 		image->bumpmap_to_normalmap(bump_strength);
 	}
+	image->generate_mipmaps();
 
 	return image;
 }
