@@ -175,6 +175,8 @@ public:
 	void remove_custom_type(const String &p_type);
 	const Map<String, Vector<CustomType>> &get_custom_types() const { return custom_types; }
 
+	void instance_object_properties(Object *p_object);
+
 	int add_edited_scene(int p_at_pos);
 	void move_edited_scene_index(int p_idx, int p_to_idx);
 	void remove_scene(int p_idx);

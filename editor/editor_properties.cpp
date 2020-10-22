@@ -2606,6 +2606,7 @@ void EditorPropertyResource::_menu_option(int p_which) {
 				//make visual script the right type
 				resp->call("set_instance_base_type", get_edited_object()->get_class());
 			}
+			EditorNode::get_editor_data().instance_object_properties(obj);
 
 			res = RES(resp);
 			emit_changed(get_edited_property(), res);
