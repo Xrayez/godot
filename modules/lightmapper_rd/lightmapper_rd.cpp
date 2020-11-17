@@ -740,7 +740,7 @@ LightmapperRD::BakeError LightmapperRD::bake(BakeQuality p_quality, bool p_use_d
 				panorama_tex->create(8, 8, false, Image::FORMAT_RGBAF);
 				for (int i = 0; i < 8; i++) {
 					for (int j = 0; j < 8; j++) {
-						panorama_tex->set_pixel(i, j, Color(0, 0, 0, 1));
+						panorama_tex->set_pixel(Point2i(i, j), Color(0, 0, 0, 1));
 					}
 				}
 			}

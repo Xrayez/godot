@@ -1275,20 +1275,18 @@ void EditorNode::_save_scene_with_preview(String p_file, int p_idx) {
 
 			// consider a square region
 			int vp_size = MIN(img->get_width(), img->get_height());
-			int x = (img->get_width() - vp_size) / 2;
-			int y = (img->get_height() - vp_size) / 2;
+			Point2i point = Point2i(img->get_width() - vp_size, img->get_height() - vp_size) / 2;
 
 			if (vp_size < preview_size) {
 				// just square it.
-				img->crop_from_point(x, y, vp_size, vp_size);
+				img->crop_from_point(point, vp_size, vp_size);
 			} else {
 				int ratio = vp_size / preview_size;
 				int size = preview_size * MAX(1, ratio / 2);
 
-				x = (img->get_width() - size) / 2;
-				y = (img->get_height() - size) / 2;
+				point = Point2i(img->get_width() - size, img->get_height() - size) / 2;
 
-				img->crop_from_point(x, y, size, size);
+				img->crop_from_point(point, size, size);
 				img->resize(preview_size, preview_size, Image::INTERPOLATE_LANCZOS);
 			}
 			img->convert(Image::FORMAT_RGB8);

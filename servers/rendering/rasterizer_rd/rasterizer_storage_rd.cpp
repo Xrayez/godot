@@ -970,7 +970,7 @@ RID RasterizerStorageRD::texture_2d_placeholder_create() {
 
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
-			image->set_pixel(i, j, Color(1, 0, 1, 1));
+			image->set_pixel(Point2i(i, j), Color(1, 0, 1, 1));
 		}
 	}
 
@@ -986,7 +986,7 @@ RID RasterizerStorageRD::texture_2d_layered_placeholder_create(RS::TextureLayere
 
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
-			image->set_pixel(i, j, Color(1, 0, 1, 1));
+			image->set_pixel(Point2i(i, j), Color(1, 0, 1, 1));
 		}
 	}
 
@@ -1012,7 +1012,7 @@ RID RasterizerStorageRD::texture_3d_placeholder_create() {
 
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
-			image->set_pixel(i, j, Color(1, 0, 1, 1));
+			image->set_pixel(Point2i(i, j), Color(1, 0, 1, 1));
 		}
 	}
 

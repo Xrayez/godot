@@ -190,8 +190,8 @@ private:
 	static int _get_dst_image_size(int p_width, int p_height, Format p_format, int &r_mipmaps, int p_mipmaps = -1, int *r_mm_width = nullptr, int *r_mm_height = nullptr);
 	bool _can_modify(Format p_format) const;
 
-	_FORCE_INLINE_ void _put_pixelb(int p_x, int p_y, uint32_t p_pixelsize, uint8_t *p_data, const uint8_t *p_pixel);
-	_FORCE_INLINE_ void _get_pixelb(int p_x, int p_y, uint32_t p_pixelsize, const uint8_t *p_data, uint8_t *p_pixel);
+	_FORCE_INLINE_ void _put_pixelb(const Point2i &p_point, uint32_t p_pixelsize, uint8_t *p_data, const uint8_t *p_pixel);
+	_FORCE_INLINE_ void _get_pixelb(const Point2i &p_point, uint32_t p_pixelsize, const uint8_t *p_data, uint8_t *p_pixel);
 
 	void _set_data(const Dictionary &p_data);
 	Dictionary _get_data() const;
@@ -252,7 +252,7 @@ public:
 	/**
 	 * Crop the image to a specific size, if larger, then the image is filled by black
 	 */
-	void crop_from_point(int p_x, int p_y, int p_width, int p_height);
+	void crop_from_point(const Point2i &p_point, int p_width, int p_height);
 	void crop(int p_width, int p_height);
 
 	void flip_x();
@@ -387,10 +387,8 @@ public:
 	UsedChannels detect_used_channels(CompressSource p_source = COMPRESS_SOURCE_GENERIC);
 	void optimize_channels();
 
-	Color get_pixelv(const Point2 &p_src) const;
-	Color get_pixel(int p_x, int p_y) const;
-	void set_pixelv(const Point2 &p_dst, const Color &p_color);
-	void set_pixel(int p_x, int p_y, const Color &p_color);
+	Color get_pixel(const Point2i &p_point) const;
+	void set_pixel(const Point2i &p_point, const Color &p_color);
 
 	void set_as_black();
 

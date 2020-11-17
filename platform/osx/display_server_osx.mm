@@ -3135,7 +3135,7 @@ void DisplayServerOSX::cursor_set_custom_image(const RES &p_cursor, CursorShape 
 				row_index = MIN(row_index, atlas_rect.size.height - 1);
 			}
 
-			uint32_t color = image->get_pixel(column_index, row_index).to_argb32();
+			uint32_t color = image->get_pixel(Point2i(column_index, row_index)).to_argb32();
 
 			uint8_t alpha = (color >> 24) & 0xFF;
 			pixels[i * 4 + 0] = ((color >> 16) & 0xFF) * alpha / 255;

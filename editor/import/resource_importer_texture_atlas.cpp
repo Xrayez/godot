@@ -97,7 +97,7 @@ Error ResourceImporterTextureAtlas::import(const String &p_source_file, const St
 	return OK;
 }
 
-static void _plot_triangle(Vector2 *vertices, const Vector2 &p_offset, bool p_transposed, Ref<Image> p_image, const Ref<Image> &p_src_image) {
+static void _plot_triangle(Vector2 *vertices, const Vector2i &p_offset, bool p_transposed, Ref<Image> p_image, const Ref<Image> &p_src_image) {
 	int width = p_image->get_width();
 	int height = p_image->get_height();
 	int src_width = p_src_image->get_width();
@@ -134,47 +134,47 @@ static void _plot_triangle(Vector2 *vertices, const Vector2 &p_offset, bool p_tr
 	for (int yi = y[0]; yi <= max_y; yi++) {
 		if (yi >= 0) {
 			for (int xi = (xf > 0 ? int(xf) : 0); xi <= (xt < width ? xt : width - 1); xi++) {
-				int px = xi, py = yi;
-				int sx = px, sy = py;
+				Point2i point = Point2i(xi, yi);
+				int sx = xi, sy = yi;
 				sx = CLAMP(sx, 0, src_width - 1);
 				sy = CLAMP(sy, 0, src_height - 1);
-				Color color = p_src_image->get_pixel(sx, sy);
+				Color color = p_src_image->get_pixel(Point2i(sx, sy));
 				if (p_transposed) {
-					SWAP(px, py);
+					SWAP(point.x, point.y);
 				}
-				px += p_offset.x;
-				py += p_offset.y;
+
+				point += p_offset;
 
 				//may have been cropped, so don't blit what is not visible?
-				if (px < 0 || px >= width) {
+				if (point.x < 0 || point.x >= width) {
 					continue;
 				}
-				if (py < 0 || py >= height) {
+				if (point.y < 0 || point.y >= height) {
 					continue;
 				}
-				p_image->set_pixel(px, py, color);
+				p_image->set_pixel(point, color);
 			}
 
 			for (int xi = (xf < width ? int(xf) : width - 1); xi >= (xt > 0 ? xt : 0); xi--) {
-				int px = xi, py = yi;
-				int sx = px, sy = py;
+				Point2i point = Point2i(xi, yi);
+				int sx = xi, sy = yi;
 				sx = CLAMP(sx, 0, src_width - 1);
 				sy = CLAMP(sy, 0, src_height - 1);
-				Color color = p_src_image->get_pixel(sx, sy);
+				Color color = p_src_image->get_pixel(Point2i(sx, sy));
 				if (p_transposed) {
-					SWAP(px, py);
+					SWAP(point.x, point.y);
 				}
-				px += p_offset.x;
-				py += p_offset.y;
+
+				point += p_offset;
 
 				//may have been cropped, so don't blit what is not visible?
-				if (px < 0 || px >= width) {
+				if (point.x < 0 || point.x >= width) {
 					continue;
 				}
-				if (py < 0 || py >= height) {
+				if (point.y < 0 || point.y >= height) {
 					continue;
 				}
-				p_image->set_pixel(px, py, color);
+				p_image->set_pixel(point, color);
 			}
 		}
 		xf += dx_far;
@@ -287,7 +287,7 @@ Error ResourceImporterTextureAtlas::import_group_file(const String &p_group_file
 					positions[l] = chart.vertices[vertex_idx];
 				}
 
-				_plot_triangle(positions, chart.final_offset, chart.transposed, new_atlas, pack_data.image);
+				_plot_triangle(positions, Vector2i(chart.final_offset), chart.transposed, new_atlas, pack_data.image);
 			}
 		}
 	}

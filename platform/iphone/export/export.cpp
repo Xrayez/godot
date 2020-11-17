@@ -652,13 +652,15 @@ void EditorExportPlatformIOS::_blend_and_rotate(Ref<Image> &p_dst, Ref<Image> &p
 
 	for (int y = ys; y < sh; y++) {
 		for (int x = xs; x < sw; x++) {
-			Color sc = p_rot ? p_src->get_pixel(p_src->get_width() - y - 1, x) : p_src->get_pixel(x, y);
-			Color dc = p_dst->get_pixel(x_pos + x, y_pos + y);
+			Point2i point = Point2i(x, y);
+			Point2i pos = Point2i(x_pos, y_pos) + point;
+			Color sc = p_rot ? p_src->get_pixel(Point2i(p_src->get_width() - y - 1, x)) : p_src->get_pixel(point);
+			Color dc = p_dst->get_pixel(pos);
 			dc.r = (double)(sc.a * sc.r + dc.a * (1.0 - sc.a) * dc.r);
 			dc.g = (double)(sc.a * sc.g + dc.a * (1.0 - sc.a) * dc.g);
 			dc.b = (double)(sc.a * sc.b + dc.a * (1.0 - sc.a) * dc.b);
 			dc.a = (double)(sc.a + dc.a * (1.0 - sc.a));
-			p_dst->set_pixel(x_pos + x, y_pos + y, dc);
+			p_dst->set_pixel(pos, dc);
 		}
 	}
 }

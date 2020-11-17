@@ -87,16 +87,16 @@ SaveEXRFunc Image::save_exr_func = nullptr;
 
 SavePNGBufferFunc Image::save_png_buffer_func = nullptr;
 
-void Image::_put_pixelb(int p_x, int p_y, uint32_t p_pixelsize, uint8_t *p_data, const uint8_t *p_pixel) {
-	uint32_t ofs = (p_y * width + p_x) * p_pixelsize;
+void Image::_put_pixelb(const Point2i &p_point, uint32_t p_pixelsize, uint8_t *p_data, const uint8_t *p_pixel) {
+	uint32_t ofs = (p_point.y * width + p_point.x) * p_pixelsize;
 
 	for (uint32_t i = 0; i < p_pixelsize; i++) {
 		p_data[ofs + i] = p_pixel[i];
 	}
 }
 
-void Image::_get_pixelb(int p_x, int p_y, uint32_t p_pixelsize, const uint8_t *p_data, uint8_t *p_pixel) {
-	uint32_t ofs = (p_y * width + p_x) * p_pixelsize;
+void Image::_get_pixelb(const Point2i &p_point, uint32_t p_pixelsize, const uint8_t *p_data, uint8_t *p_pixel) {
+	uint32_t ofs = (p_point.y * width + p_point.x) * p_pixelsize;
 
 	for (uint32_t i = 0; i < p_pixelsize; i++) {
 		p_pixel[i] = p_data[ofs + i];
@@ -522,7 +522,8 @@ void Image::convert(Format p_new_format) {
 
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
-				new_img.set_pixel(i, j, get_pixel(i, j));
+				Point2i point = Point2i(i, j);
+				new_img.set_pixel(point, get_pixel(point));
 			}
 		}
 
@@ -1315,21 +1316,21 @@ void Image::resize(int p_width, int p_height, Interpolation p_interpolation) {
 	_copy_internals_from(dst);
 }
 
-void Image::crop_from_point(int p_x, int p_y, int p_width, int p_height) {
+void Image::crop_from_point(const Point2i &p_point, int p_width, int p_height) {
 	ERR_FAIL_COND_MSG(!_can_modify(format), "Cannot crop in compressed or custom image formats.");
 
-	ERR_FAIL_COND_MSG(p_x < 0, "Start x position cannot be smaller than 0.");
-	ERR_FAIL_COND_MSG(p_y < 0, "Start y position cannot be smaller than 0.");
+	ERR_FAIL_COND_MSG(p_point.x < 0, "Start x position cannot be smaller than 0.");
+	ERR_FAIL_COND_MSG(p_point.y < 0, "Start y position cannot be smaller than 0.");
 	ERR_FAIL_COND_MSG(p_width <= 0, "Width of image must be greater than 0.");
 	ERR_FAIL_COND_MSG(p_height <= 0, "Height of image must be greater than 0.");
-	ERR_FAIL_COND_MSG(p_x + p_width > MAX_WIDTH, "End x position cannot be greater than " + itos(MAX_WIDTH) + ".");
-	ERR_FAIL_COND_MSG(p_y + p_height > MAX_HEIGHT, "End y position cannot be greater than " + itos(MAX_HEIGHT) + ".");
+	ERR_FAIL_COND_MSG(p_point.x + p_width > MAX_WIDTH, "End x position cannot be greater than " + itos(MAX_WIDTH) + ".");
+	ERR_FAIL_COND_MSG(p_point.y + p_height > MAX_HEIGHT, "End y position cannot be greater than " + itos(MAX_HEIGHT) + ".");
 
 	/* to save memory, cropping should be done in-place, however, since this function
 	   will most likely either not be used much, or in critical areas, for now it won't, because
 	   it's a waste of time. */
 
-	if (p_width == width && p_height == height && p_x == 0 && p_y == 0) {
+	if (p_width == width && p_height == height && p_point.x == 0 && p_point.y == 0) {
 		return;
 	}
 
@@ -1342,19 +1343,18 @@ void Image::crop_from_point(int p_x, int p_y, int p_width, int p_height) {
 		const uint8_t *r = data.ptr();
 		uint8_t *w = dst.data.ptrw();
 
-		int m_h = p_y + p_height;
-		int m_w = p_x + p_width;
-		for (int y = p_y; y < m_h; y++) {
-			for (int x = p_x; x < m_w; x++) {
-				if ((x >= width || y >= height)) {
+		for (int y = p_point.y; y < p_point.y + p_height; y++) {
+			for (int x = p_point.x; x < p_point.x + p_width; x++) {
+				Point2i point = Point2i(x, y);
+				if (x >= width || y >= height) {
 					for (uint32_t i = 0; i < pixel_size; i++) {
 						pdata[i] = 0;
 					}
 				} else {
-					_get_pixelb(x, y, pixel_size, r, pdata);
+					_get_pixelb(point, pixel_size, r, pdata);
 				}
 
-				dst._put_pixelb(x - p_x, y - p_y, pixel_size, w, pdata);
+				dst._put_pixelb(point - p_point, pixel_size, w, pdata);
 			}
 		}
 	}
@@ -1366,7 +1366,7 @@ void Image::crop_from_point(int p_x, int p_y, int p_width, int p_height) {
 }
 
 void Image::crop(int p_width, int p_height) {
-	crop_from_point(0, 0, p_width, p_height);
+	crop_from_point(Point2i(), p_width, p_height);
 }
 
 void Image::flip_y() {
@@ -1385,11 +1385,12 @@ void Image::flip_y() {
 
 		for (int y = 0; y < height / 2; y++) {
 			for (int x = 0; x < width; x++) {
-				_get_pixelb(x, y, pixel_size, w, up);
-				_get_pixelb(x, height - y - 1, pixel_size, w, down);
+				Point2i point = Point2i(x, y);
+				_get_pixelb(point, pixel_size, w, up);
+				_get_pixelb(Point2i(x, height - y - 1), pixel_size, w, down);
 
-				_put_pixelb(x, height - y - 1, pixel_size, w, up);
-				_put_pixelb(x, y, pixel_size, w, down);
+				_put_pixelb(Point2i(x, height - y - 1), pixel_size, w, up);
+				_put_pixelb(point, pixel_size, w, down);
 			}
 		}
 	}
@@ -1415,11 +1416,12 @@ void Image::flip_x() {
 
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width / 2; x++) {
-				_get_pixelb(x, y, pixel_size, w, up);
-				_get_pixelb(width - x - 1, y, pixel_size, w, down);
+				Point2i point = Point2i(x, y);
+				_get_pixelb(point, pixel_size, w, up);
+				_get_pixelb(Point2i(width - x - 1, y), pixel_size, w, down);
 
-				_put_pixelb(width - x - 1, y, pixel_size, w, up);
-				_put_pixelb(x, y, pixel_size, w, down);
+				_put_pixelb(Point2i(width - x - 1, y), pixel_size, w, up);
+				_put_pixelb(point, pixel_size, w, down);
 			}
 		}
 	}
@@ -1623,13 +1625,14 @@ void Image::normalize() {
 
 	for (int y = 0; y < height; y++) {
 		for (int x = 0; x < width; x++) {
-			Color c = get_pixel(x, y);
+			Point2i point = Point2i(x, y);
+			Color c = get_pixel(point);
 			Vector3 v(c.r * 2.0 - 1.0, c.g * 2.0 - 1.0, c.b * 2.0 - 1.0);
 			v.normalize();
 			c.r = v.x * 0.5 + 0.5;
 			c.g = v.y * 0.5 + 0.5;
 			c.b = v.z * 0.5 + 0.5;
-			set_pixel(x, y, c);
+			set_pixel(point, c);
 		}
 	}
 
@@ -1776,7 +1779,7 @@ Error Image::generate_mipmap_roughness(RoughnessChannel p_roughness_channel, con
 		double line_sum[3] = { 0, 0, 0 };
 		for (int x = 0; x < normal_w; x++) {
 			double normal[3];
-			Color color = nm->get_pixel(x, y);
+			Color color = nm->get_pixel(Point2i(x, y));
 			normal[0] = color.r * 2.0 - 1.0;
 			normal[1] = color.g * 2.0 - 1.0;
 			normal[2] = Math::sqrt(MAX(0.0, 1.0 - (normal[0] * normal[0] + normal[1] * normal[1]))); //reconstruct if missing
@@ -2145,7 +2148,7 @@ void Image::create(const char **p_xpm) {
 					for (uint32_t i = 0; i < pixel_size; i++) {
 						pixel[i] = CLAMP((*colorptr)[i] * 255, 0, 255);
 					}
-					_put_pixelb(x, y, pixel_size, data_write, pixel);
+					_put_pixelb(Point2i(x, y), pixel_size, data_write, pixel);
 				}
 
 				if (y == (size_height - 1)) {
@@ -2444,7 +2447,7 @@ Rect2 Image::get_used_rect() const {
 	int maxx = -1, maxy = -1;
 	for (int j = 0; j < height; j++) {
 		for (int i = 0; i < width; i++) {
-			if (!(get_pixel(i, j).a > 0)) {
+			if (!(get_pixel(Point2i(i, j)).a > 0)) {
 				continue;
 			}
 			if (i > maxx) {
@@ -2567,15 +2570,14 @@ void Image::blit_rect_mask(const Ref<Image> &p_src, const Ref<Image> &p_mask, co
 
 	for (int i = 0; i < dest_rect.size.y; i++) {
 		for (int j = 0; j < dest_rect.size.x; j++) {
-			int src_x = clipped_src_rect.position.x + j;
-			int src_y = clipped_src_rect.position.y + i;
+			Point2i point = Point2i(j, i);
+			Point2i source = clipped_src_rect.position + point;
 
-			if (msk->get_pixel(src_x, src_y).a != 0) {
-				int dst_x = dest_rect.position.x + j;
-				int dst_y = dest_rect.position.y + i;
+			if (msk->get_pixel(source).a != 0) {
+				Point2i destination = dest_rect.position + point;
 
-				const uint8_t *src = &src_data_ptr[(src_y * p_src->width + src_x) * pixel_size];
-				uint8_t *dst = &dst_data_ptr[(dst_y * width + dst_x) * pixel_size];
+				const uint8_t *src = &src_data_ptr[(source.y * p_src->width + source.x) * pixel_size];
+				uint8_t *dst = &dst_data_ptr[(destination.y * width + destination.x) * pixel_size];
 
 				for (int k = 0; k < pixel_size; k++) {
 					dst[k] = src[k];
@@ -2613,17 +2615,15 @@ void Image::blend_rect(const Ref<Image> &p_src, const Rect2 &p_src_rect, const P
 
 	for (int i = 0; i < dest_rect.size.y; i++) {
 		for (int j = 0; j < dest_rect.size.x; j++) {
-			int src_x = clipped_src_rect.position.x + j;
-			int src_y = clipped_src_rect.position.y + i;
+			Point2i point = Point2i(j, i);
+			Point2i source = clipped_src_rect.position + point;
+			Point2i destination = dest_rect.position + point;
 
-			int dst_x = dest_rect.position.x + j;
-			int dst_y = dest_rect.position.y + i;
-
-			Color sc = img->get_pixel(src_x, src_y);
+			Color sc = img->get_pixel(source);
 			if (sc.a != 0) {
-				Color dc = get_pixel(dst_x, dst_y);
+				Color dc = get_pixel(destination);
 				dc = dc.blend(sc);
-				set_pixel(dst_x, dst_y, dc);
+				set_pixel(destination, dc);
 			}
 		}
 	}
@@ -2663,21 +2663,20 @@ void Image::blend_rect_mask(const Ref<Image> &p_src, const Ref<Image> &p_mask, c
 
 	for (int i = 0; i < dest_rect.size.y; i++) {
 		for (int j = 0; j < dest_rect.size.x; j++) {
-			int src_x = clipped_src_rect.position.x + j;
-			int src_y = clipped_src_rect.position.y + i;
+			Point2i point = Point2i(j, i);
+			Point2i source = clipped_src_rect.position + point;
 
 			// If the mask's pixel is transparent then we skip it
-			//Color c = msk->get_pixel(src_x, src_y);
+			//Color c = msk->get_pixel(source);
 			//if (c.a == 0) continue;
-			if (msk->get_pixel(src_x, src_y).a != 0) {
-				int dst_x = dest_rect.position.x + j;
-				int dst_y = dest_rect.position.y + i;
+			if (msk->get_pixel(source).a != 0) {
+				Point2i destination = dest_rect.position + point;
 
-				Color sc = img->get_pixel(src_x, src_y);
+				Color sc = img->get_pixel(source);
 				if (sc.a != 0) {
-					Color dc = get_pixel(dst_x, dst_y);
+					Color dc = get_pixel(destination);
 					dc = dc.blend(sc);
-					set_pixel(dst_x, dst_y, dc);
+					set_pixel(destination, dc);
 				}
 			}
 		}
@@ -2693,7 +2692,7 @@ void Image::fill(const Color &c) {
 	int pixel_size = get_format_pixel_size(format);
 
 	// put first pixel with the format-aware API
-	set_pixel(0, 0, c);
+	set_pixel(Point2i(), c);
 
 	for (int y = 0; y < height; y++) {
 		for (int x = 0; x < width; x++) {
@@ -2764,10 +2763,6 @@ Dictionary Image::_get_data() const {
 	d["mipmaps"] = mipmaps;
 	d["data"] = data;
 	return d;
-}
-
-Color Image::get_pixelv(const Point2 &p_src) const {
-	return get_pixel(p_src.x, p_src.y);
 }
 
 Color Image::_get_color_at_ofs(const uint8_t *ptr, uint32_t ofs) const {
@@ -2966,27 +2961,23 @@ void Image::_set_color_at_ofs(uint8_t *ptr, uint32_t ofs, const Color &p_color) 
 	}
 }
 
-Color Image::get_pixel(int p_x, int p_y) const {
+Color Image::get_pixel(const Point2i &p_point) const {
 #ifdef DEBUG_ENABLED
-	ERR_FAIL_INDEX_V(p_x, width, Color());
-	ERR_FAIL_INDEX_V(p_y, height, Color());
+	ERR_FAIL_INDEX_V(p_point.x, width, Color());
+	ERR_FAIL_INDEX_V(p_point.y, height, Color());
 #endif
 
-	uint32_t ofs = p_y * width + p_x;
+	uint32_t ofs = p_point.y * width + p_point.x;
 	return _get_color_at_ofs(data.ptr(), ofs);
 }
 
-void Image::set_pixelv(const Point2 &p_dst, const Color &p_color) {
-	set_pixel(p_dst.x, p_dst.y, p_color);
-}
-
-void Image::set_pixel(int p_x, int p_y, const Color &p_color) {
+void Image::set_pixel(const Point2i &p_point, const Color &p_color) {
 #ifdef DEBUG_ENABLED
-	ERR_FAIL_INDEX(p_x, width);
-	ERR_FAIL_INDEX(p_y, height);
+	ERR_FAIL_INDEX(p_point.x, width);
+	ERR_FAIL_INDEX(p_point.y, height);
 #endif
 
-	uint32_t ofs = p_y * width + p_x;
+	uint32_t ofs = p_point.y * width + p_point.x;
 	_set_color_at_ofs(data.ptrw(), ofs, p_color);
 }
 
@@ -2997,7 +2988,7 @@ Image::UsedChannels Image::detect_used_channels(CompressSource p_source) {
 
 	for (int i = 0; i < width; i++) {
 		for (int j = 0; j < height; j++) {
-			Color col = get_pixel(i, j);
+			Color col = get_pixel(Point2i(i, j));
 
 			if (col.r > 0.001) {
 				r = true;
@@ -3132,10 +3123,8 @@ void Image::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("_set_data", "data"), &Image::_set_data);
 	ClassDB::bind_method(D_METHOD("_get_data"), &Image::_get_data);
 
-	ClassDB::bind_method(D_METHOD("get_pixelv", "src"), &Image::get_pixelv);
-	ClassDB::bind_method(D_METHOD("get_pixel", "x", "y"), &Image::get_pixel);
-	ClassDB::bind_method(D_METHOD("set_pixelv", "dst", "color"), &Image::set_pixelv);
-	ClassDB::bind_method(D_METHOD("set_pixel", "x", "y", "color"), &Image::set_pixel);
+	ClassDB::bind_method(D_METHOD("get_pixel", "point"), &Image::get_pixel);
+	ClassDB::bind_method(D_METHOD("set_pixel", "point", "color"), &Image::set_pixel);
 
 	ClassDB::bind_method(D_METHOD("load_png_from_buffer", "buffer"), &Image::load_png_from_buffer);
 	ClassDB::bind_method(D_METHOD("load_jpg_from_buffer", "buffer"), &Image::load_jpg_from_buffer);
@@ -3255,7 +3244,8 @@ Ref<Image> Image::rgbe_to_srgb() {
 
 	for (int row = 0; row < height; row++) {
 		for (int col = 0; col < width; col++) {
-			new_image->set_pixel(col, row, get_pixel(col, row).to_srgb());
+			Point2i point = Point2i(col, row);
+			new_image->set_pixel(point, get_pixel(point).to_srgb());
 		}
 	}
 

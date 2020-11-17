@@ -450,7 +450,8 @@ Error ResourceImporterTexture::import(const String &p_source_file, const String 
 
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
-				image->set_pixel(i, j, image->get_pixel(i, j).inverted());
+				Point2i point = Point2i(i, j);
+				image->set_pixel(point, image->get_pixel(point).inverted());
 			}
 		}
 	}

@@ -1821,7 +1821,7 @@ void DisplayServerX11::cursor_set_custom_image(const RES &p_cursor, CursorShape 
 				row_index = MIN(row_index, atlas_rect.size.height - 1);
 			}
 
-			*(cursor_image->pixels + index) = image->get_pixel(column_index, row_index).to_argb32();
+			*(cursor_image->pixels + index) = image->get_pixel(Point2i(column_index, row_index)).to_argb32();
 		}
 
 		ERR_FAIL_COND(cursor_image->pixels == nullptr);

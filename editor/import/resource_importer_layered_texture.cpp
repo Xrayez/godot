@@ -208,14 +208,14 @@ void ResourceImporterLayeredTexture::_save_tex(Vector<Ref<Image>> p_images, cons
 								posi_n.z++;
 							}
 
-							Color c000 = parent_images[posi.z]->get_pixel(posi.x, posi.y);
-							Color c100 = parent_images[posi.z]->get_pixel(posi_n.x, posi.y);
-							Color c010 = parent_images[posi.z]->get_pixel(posi.x, posi_n.y);
-							Color c110 = parent_images[posi.z]->get_pixel(posi_n.x, posi_n.y);
-							Color c001 = parent_images[posi_n.z]->get_pixel(posi.x, posi.y);
-							Color c101 = parent_images[posi_n.z]->get_pixel(posi_n.x, posi.y);
-							Color c011 = parent_images[posi_n.z]->get_pixel(posi.x, posi_n.y);
-							Color c111 = parent_images[posi_n.z]->get_pixel(posi_n.x, posi_n.y);
+							Color c000 = parent_images[posi.z]->get_pixel(Point2i(posi.x, posi.y));
+							Color c100 = parent_images[posi.z]->get_pixel(Point2i(posi_n.x, posi.y));
+							Color c010 = parent_images[posi.z]->get_pixel(Point2i(posi.x, posi_n.y));
+							Color c110 = parent_images[posi.z]->get_pixel(Point2i(posi_n.x, posi_n.y));
+							Color c001 = parent_images[posi_n.z]->get_pixel(Point2i(posi.x, posi.y));
+							Color c101 = parent_images[posi_n.z]->get_pixel(Point2i(posi_n.x, posi.y));
+							Color c011 = parent_images[posi_n.z]->get_pixel(Point2i(posi.x, posi_n.y));
+							Color c111 = parent_images[posi_n.z]->get_pixel(Point2i(posi_n.x, posi_n.y));
 
 							Color cx00 = c000.lerp(c100, fract.x);
 							Color cx01 = c001.lerp(c101, fract.x);
@@ -227,7 +227,7 @@ void ResourceImporterLayeredTexture::_save_tex(Vector<Ref<Image>> p_images, cons
 
 							Color cz = cy0.lerp(cy1, fract.z);
 
-							mm->set_pixel(x, y, cz);
+							mm->set_pixel(Point2i(x, y), cz);
 						}
 					}
 

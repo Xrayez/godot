@@ -1854,11 +1854,12 @@ Ref<Image> RasterizerSceneRD::sky_bake_panorama(RID p_sky, float p_energy, bool 
 		img->create(p_size.width, p_size.height, false, Image::FORMAT_RGBAF, data);
 		for (int i = 0; i < p_size.width; i++) {
 			for (int j = 0; j < p_size.height; j++) {
-				Color c = img->get_pixel(i, j);
+				Point2i point = Point2i(i, j);
+				Color c = img->get_pixel(point);
 				c.r *= p_energy;
 				c.g *= p_energy;
 				c.b *= p_energy;
-				img->set_pixel(i, j, c);
+				img->set_pixel(point, c);
 			}
 		}
 		return img;
@@ -3179,7 +3180,7 @@ Ref<Image> RasterizerSceneRD::environment_bake_panorama(RID p_env, bool p_bake_i
 		ret->create(p_size.width, p_size.height, false, Image::FORMAT_RGBAF);
 		for (int i = 0; i < p_size.width; i++) {
 			for (int j = 0; j < p_size.height; j++) {
-				ret->set_pixel(i, j, color);
+				ret->set_pixel(Point2i(i, j), color);
 			}
 		}
 		return ret;

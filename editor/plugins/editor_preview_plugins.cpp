@@ -59,10 +59,10 @@ void post_process_preview(Ref<Image> p_image) {
 			int dx = i - r;
 			int dy = j - r;
 			if (dx * dx + dy * dy > r2) {
-				p_image->set_pixel(i, j, transparent);
-				p_image->set_pixel(w - 1 - i, j, transparent);
-				p_image->set_pixel(w - 1 - i, h - 1 - j, transparent);
-				p_image->set_pixel(i, h - 1 - j, transparent);
+				p_image->set_pixel(Point2i(i, j), transparent);
+				p_image->set_pixel(Point2i(w - 1 - i, j), transparent);
+				p_image->set_pixel(Point2i(w - 1 - i, h - 1 - j), transparent);
+				p_image->set_pixel(Point2i(i, h - 1 - j), transparent);
 			} else {
 				break;
 			}
@@ -513,7 +513,7 @@ Ref<Texture2D> EditorScriptPreviewPlugin::generate(const RES &p_from, const Size
 
 	for (int i = 0; i < thumbnail_size; i++) {
 		for (int j = 0; j < thumbnail_size; j++) {
-			img->set_pixel(i, j, bg_color);
+			img->set_pixel(Point2i(i, j), bg_color);
 		}
 	}
 
@@ -555,8 +555,8 @@ Ref<Texture2D> EditorScriptPreviewPlugin::generate(const RES &p_from, const Size
 
 				Color ul = color;
 				ul.a *= 0.5;
-				img->set_pixel(col, y0 + line * 2, bg_color.blend(ul));
-				img->set_pixel(col, y0 + line * 2 + 1, color);
+				img->set_pixel(Point2i(col, y0 + line * 2), bg_color.blend(ul));
+				img->set_pixel(Point2i(col, y0 + line * 2 + 1), color);
 
 				prev_is_text = _is_text_char(c);
 			}

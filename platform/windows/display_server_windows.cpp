@@ -1339,7 +1339,7 @@ void DisplayServerWindows::cursor_set_custom_image(const RES &p_cursor, CursorSh
 				row_index = MIN(row_index, atlas_rect.size.height - 1);
 			}
 
-			*(buffer + index) = image->get_pixel(column_index, row_index).to_argb32();
+			*(buffer + index) = image->get_pixel(Point2i(column_index, row_index)).to_argb32();
 		}
 
 		// Using 4 channels, so 4 * 8 bits

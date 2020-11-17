@@ -803,7 +803,7 @@ Ref<Texture2D> CurvePreviewGenerator::generate(const Ref<Resource> &p_from, cons
 	Color bg_color(0.1, 0.1, 0.1, 1.0);
 	for (int i = 0; i < thumbnail_size; i++) {
 		for (int j = 0; j < thumbnail_size / 2; j++) {
-			im.set_pixel(i, j, bg_color);
+			im.set_pixel(Point2i(i, j), bg_color);
 		}
 	}
 
@@ -818,7 +818,7 @@ Ref<Texture2D> CurvePreviewGenerator::generate(const Ref<Resource> &p_from, cons
 
 		// Plot point
 		if (y >= 0 && y < im.get_height()) {
-			im.set_pixel(x, y, line_color);
+			im.set_pixel(Point2i(x, y), line_color);
 		}
 
 		// Plot vertical line to fix discontinuity (not 100% correct but enough for a preview)
@@ -832,7 +832,7 @@ Ref<Texture2D> CurvePreviewGenerator::generate(const Ref<Resource> &p_from, cons
 				y1 = y;
 			}
 			for (int ly = y0; ly < y1; ++ly) {
-				im.set_pixel(x, ly, line_color);
+				im.set_pixel(Point2i(x, ly), line_color);
 			}
 		}
 

@@ -951,7 +951,7 @@ BakedLightmap::BakeError BakedLightmap::bake(Node *p_from_node, String p_image_d
 				c.b *= environment_custom_energy;
 				for (int i = 0; i < 128; i++) {
 					for (int j = 0; j < 64; j++) {
-						environment_image->set_pixel(i, j, c);
+						environment_image->set_pixel(Point2i(i, j), c);
 					}
 				}
 
