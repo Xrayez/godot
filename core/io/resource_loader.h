@@ -160,8 +160,9 @@ public:
 	static int get_import_order(const String &p_path);
 
 	static void add_subproject_path(const String &p_path) { subproject_paths.push_back(p_path); }
-	static List<String> &get_subproject_paths() { return subproject_paths; }
 	static void clear_subproject_paths() { subproject_paths.clear(); }
+	static void save_subproject_paths();
+	static void load_subproject_paths();
 
 	static void set_timestamp_on_load(bool p_timestamp) { timestamp_on_load = p_timestamp; }
 	static bool get_timestamp_on_load() { return timestamp_on_load; }

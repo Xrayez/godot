@@ -1458,6 +1458,7 @@ void EditorFileSystem::update_script_classes() {
 		return;
 
 	update_script_classes_queued = false;
+
 	ScriptServer::global_classes_clear();
 	if (get_filesystem()) {
 		_scan_script_classes(get_filesystem());
@@ -1465,6 +1466,9 @@ void EditorFileSystem::update_script_classes() {
 
 	ScriptServer::save_global_classes();
 	EditorNode::get_editor_data().script_class_save_icon_paths();
+
+	// Save subproject paths here. TODO: move to another method.
+	ResourceLoader::save_subproject_paths();
 
 	// Rescan custom loaders and savers.
 	// Doing the following here because the `filesystem_changed` signal fires multiple times and isn't always followed by script classes update.

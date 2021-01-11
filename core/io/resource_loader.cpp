@@ -905,6 +905,32 @@ void ResourceLoader::clear_path_remaps() {
 	path_remaps.clear();
 }
 
+void ResourceLoader::save_subproject_paths() {
+	Array paths;
+	for (List<String>::Element *E = subproject_paths.front(); E; E = E->next()) {
+		paths.push_back(E->get());
+	}
+
+	if (paths.empty()) {
+		if (ProjectSettings::get_singleton()->has_setting("_subproject_paths")) {
+			ProjectSettings::get_singleton()->clear("_subproject_paths");
+		}
+	} else {
+		ProjectSettings::get_singleton()->set("_subproject_paths", paths);
+	}
+	ProjectSettings::get_singleton()->save();
+}
+
+void ResourceLoader::load_subproject_paths() {
+	if (ProjectSettings::get_singleton()->has_setting("_subproject_paths")) {
+		clear_subproject_paths();
+		Array paths = ProjectSettings::get_singleton()->get("_subproject_paths");
+		for (int i = 0; i < paths.size(); i++) {
+			add_subproject_path(paths[i]);
+		}
+	}
+}
+
 void ResourceLoader::set_load_callback(ResourceLoadedCallback p_callback) {
 	_loaded_callback = p_callback;
 }

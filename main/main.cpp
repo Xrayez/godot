@@ -1449,6 +1449,8 @@ Error Main::setup2(Thread::ID p_main_tid_override) {
 
 	ResourceLoader::load_path_remaps();
 
+	ResourceLoader::load_subproject_paths();
+
 	audio_server->load_default_bus_layout();
 
 	if (use_debug_profiler && script_debugger) {
