@@ -108,7 +108,7 @@ class ResourceLoader {
 	static HashMap<String, String> path_remaps;
 	static List<String> subproject_paths;
 
-	static String _localize_path(const String &p_path);
+	static String _localize_path(const String &p_path, String *r_subproject_path = NULL);
 	static String _path_remap(const String &p_path, bool *r_translation_remapped = NULL);
 	friend class Resource;
 

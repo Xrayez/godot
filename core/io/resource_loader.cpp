@@ -348,7 +348,8 @@ RES ResourceLoader::load(const String &p_path, const String &p_type_hint, bool p
 	if (r_error)
 		*r_error = ERR_CANT_OPEN;
 
-	String local_path = _localize_path(p_path);
+	String subproject_path;
+	String local_path = _localize_path(p_path, &subproject_path);
 
 	if (!p_no_cache) {
 
@@ -405,6 +406,9 @@ RES ResourceLoader::load(const String &p_path, const String &p_type_hint, bool p
 	}
 	if (!p_no_cache)
 		res->set_path(local_path);
+
+	if (!subproject_path.empty())
+		res->set_project_path(subproject_path);
 
 	if (xl_remapped)
 		res->set_as_translation_remapped(true);
@@ -696,7 +700,7 @@ String ResourceLoader::get_resource_type(const String &p_path) {
 	return "";
 }
 
-String ResourceLoader::_localize_path(const String &p_path) {
+String ResourceLoader::_localize_path(const String &p_path, String *r_subproject_path) {
 	String local_path;
 	if (p_path.is_rel_path()) {
 		local_path = "res://" + p_path;
@@ -711,6 +715,9 @@ String ResourceLoader::_localize_path(const String &p_path) {
 			String subpath = E->get().plus_file(local_path.right(basepos + base.length()));
 			if (FileAccess::exists(subpath)) {
 				local_path = subpath;
+				if (r_subproject_path) {
+					*r_subproject_path = E->get();
+				}
 				break;
 			}
 		}

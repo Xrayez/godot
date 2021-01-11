@@ -100,6 +100,11 @@ String Resource::get_path() const {
 	return path_cache;
 }
 
+void Resource::set_project_path(const String &p_path) {
+	ERR_FAIL_COND(!p_path.begins_with("res://"));
+	project_path = p_path;
+}
+
 void Resource::set_subindex(int p_sub_index) {
 
 	subindex = p_sub_index;
