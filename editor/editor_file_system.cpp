@@ -304,6 +304,7 @@ void EditorFileSystem::_scan_filesystem() {
 
 	DirAccess *d = DirAccess::create(DirAccess::ACCESS_RESOURCES);
 	d->change_dir("res://");
+	ResourceLoader::clear_subproject_paths();
 	_scan_new_dir(new_filesystem, d, sp);
 
 	file_cache.clear(); //clear caches, no longer needed
@@ -684,9 +685,10 @@ void EditorFileSystem::_scan_new_dir(EditorFileSystemDirectory *p_dir, DirAccess
 			if (f.begins_with(".")) // Ignore special and . / ..
 				continue;
 
-			if (FileAccess::exists(cd.plus_file(f).plus_file("project.godot"))) // skip if another project inside this
-				continue;
-			if (FileAccess::exists(cd.plus_file(f).plus_file(".gdignore"))) // skip if another project inside this
+			if (FileAccess::exists(cd.plus_file(f).plus_file("project.godot"))) {
+				ResourceLoader::add_subproject_path(cd.plus_file(f));
+			}
+			if (FileAccess::exists(cd.plus_file(f).plus_file(".gdignore")))
 				continue;
 
 			dirs.push_back(f);

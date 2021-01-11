@@ -348,11 +348,7 @@ RES ResourceLoader::load(const String &p_path, const String &p_type_hint, bool p
 	if (r_error)
 		*r_error = ERR_CANT_OPEN;
 
-	String local_path;
-	if (p_path.is_rel_path())
-		local_path = "res://" + p_path;
-	else
-		local_path = ProjectSettings::get_singleton()->localize_path(p_path);
+	String local_path = _localize_path(p_path);
 
 	if (!p_no_cache) {
 
@@ -436,11 +432,7 @@ RES ResourceLoader::load(const String &p_path, const String &p_type_hint, bool p
 
 bool ResourceLoader::exists(const String &p_path, const String &p_type_hint) {
 
-	String local_path;
-	if (p_path.is_rel_path())
-		local_path = "res://" + p_path;
-	else
-		local_path = ProjectSettings::get_singleton()->localize_path(p_path);
+	String local_path = _localize_path(p_path);
 
 	if (ResourceCache::has(local_path)) {
 
@@ -469,11 +461,7 @@ Ref<ResourceInteractiveLoader> ResourceLoader::load_interactive(const String &p_
 	if (r_error)
 		*r_error = ERR_CANT_OPEN;
 
-	String local_path;
-	if (p_path.is_rel_path())
-		local_path = "res://" + p_path;
-	else
-		local_path = ProjectSettings::get_singleton()->localize_path(p_path);
+	String local_path = _localize_path(p_path);
 
 	if (!p_no_cache) {
 
@@ -575,11 +563,7 @@ int ResourceLoader::get_import_order(const String &p_path) {
 
 	String path = _path_remap(p_path);
 
-	String local_path;
-	if (path.is_rel_path())
-		local_path = "res://" + path;
-	else
-		local_path = ProjectSettings::get_singleton()->localize_path(path);
+	String local_path = _localize_path(path);
 
 	for (int i = 0; i < loader_count; i++) {
 
@@ -599,11 +583,7 @@ int ResourceLoader::get_import_order(const String &p_path) {
 String ResourceLoader::get_import_group_file(const String &p_path) {
 	String path = _path_remap(p_path);
 
-	String local_path;
-	if (path.is_rel_path())
-		local_path = "res://" + path;
-	else
-		local_path = ProjectSettings::get_singleton()->localize_path(path);
+	String local_path = _localize_path(path);
 
 	for (int i = 0; i < loader_count; i++) {
 
@@ -624,11 +604,7 @@ bool ResourceLoader::is_import_valid(const String &p_path) {
 
 	String path = _path_remap(p_path);
 
-	String local_path;
-	if (path.is_rel_path())
-		local_path = "res://" + path;
-	else
-		local_path = ProjectSettings::get_singleton()->localize_path(path);
+	String local_path = _localize_path(path);
 
 	for (int i = 0; i < loader_count; i++) {
 
@@ -649,11 +625,7 @@ bool ResourceLoader::is_imported(const String &p_path) {
 
 	String path = _path_remap(p_path);
 
-	String local_path;
-	if (path.is_rel_path())
-		local_path = "res://" + path;
-	else
-		local_path = ProjectSettings::get_singleton()->localize_path(path);
+	String local_path = _localize_path(path);
 
 	for (int i = 0; i < loader_count; i++) {
 
@@ -674,11 +646,7 @@ void ResourceLoader::get_dependencies(const String &p_path, List<String> *p_depe
 
 	String path = _path_remap(p_path);
 
-	String local_path;
-	if (path.is_rel_path())
-		local_path = "res://" + path;
-	else
-		local_path = ProjectSettings::get_singleton()->localize_path(path);
+	String local_path = _localize_path(path);
 
 	for (int i = 0; i < loader_count; i++) {
 
@@ -697,11 +665,7 @@ Error ResourceLoader::rename_dependencies(const String &p_path, const Map<String
 
 	String path = _path_remap(p_path);
 
-	String local_path;
-	if (path.is_rel_path())
-		local_path = "res://" + path;
-	else
-		local_path = ProjectSettings::get_singleton()->localize_path(path);
+	String local_path = _localize_path(path);
 
 	for (int i = 0; i < loader_count; i++) {
 
@@ -720,11 +684,7 @@ Error ResourceLoader::rename_dependencies(const String &p_path, const Map<String
 
 String ResourceLoader::get_resource_type(const String &p_path) {
 
-	String local_path;
-	if (p_path.is_rel_path())
-		local_path = "res://" + p_path;
-	else
-		local_path = ProjectSettings::get_singleton()->localize_path(p_path);
+	String local_path = _localize_path(p_path);
 
 	for (int i = 0; i < loader_count; i++) {
 
@@ -734,6 +694,28 @@ String ResourceLoader::get_resource_type(const String &p_path) {
 	}
 
 	return "";
+}
+
+String ResourceLoader::_localize_path(const String &p_path) {
+	String local_path;
+	if (p_path.is_rel_path()) {
+		local_path = "res://" + p_path;
+	} else {
+		local_path = ProjectSettings::get_singleton()->localize_path(p_path);
+	}
+	if (!FileAccess::exists(local_path)) {
+		// Try to remap to subproject path.
+		for (List<String>::Element *E = subproject_paths.front(); E; E = E->next()) {
+			String base = "://";
+			int basepos = local_path.find(base);
+			String subpath = E->get().plus_file(local_path.right(basepos + base.length()));
+			if (FileAccess::exists(subpath)) {
+				local_path = subpath;
+				break;
+			}
+		}
+	}
+	return local_path;
 }
 
 String ResourceLoader::_path_remap(const String &p_path, bool *r_translation_remapped) {
@@ -1037,5 +1019,6 @@ bool ResourceLoader::timestamp_on_load = false;
 SelfList<Resource>::List ResourceLoader::remapped_list;
 HashMap<String, Vector<String> > ResourceLoader::translation_remaps;
 HashMap<String, String> ResourceLoader::path_remaps;
+List<String> ResourceLoader::subproject_paths;
 
 ResourceLoaderImport ResourceLoader::import = NULL;
