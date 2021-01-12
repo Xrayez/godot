@@ -101,7 +101,11 @@ String Resource::get_path() const {
 }
 
 void Resource::set_project_path(const String &p_path) {
-	ERR_FAIL_COND(!p_path.begins_with("res://"));
+#ifdef DEBUG_ENABLED
+	if (!p_path.empty()) {
+		ERR_FAIL_COND(p_path == path_cache);
+	}
+#endif
 	project_path = p_path;
 }
 
@@ -414,6 +418,8 @@ void Resource::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_path", "path"), &Resource::_set_path);
 	ClassDB::bind_method(D_METHOD("take_over_path", "path"), &Resource::_take_over_path);
 	ClassDB::bind_method(D_METHOD("get_path"), &Resource::get_path);
+	ClassDB::bind_method(D_METHOD("set_project_path", "project_path"), &Resource::set_project_path);
+	ClassDB::bind_method(D_METHOD("get_project_path"), &Resource::get_project_path);
 	ClassDB::bind_method(D_METHOD("set_name", "name"), &Resource::set_name);
 	ClassDB::bind_method(D_METHOD("get_name"), &Resource::get_name);
 	ClassDB::bind_method(D_METHOD("get_rid"), &Resource::get_rid);
@@ -427,6 +433,7 @@ void Resource::_bind_methods() {
 	ADD_GROUP("Resource", "resource_");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "resource_local_to_scene"), "set_local_to_scene", "is_local_to_scene");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "resource_path", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR), "set_path", "get_path");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "resource_project_path", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR), "set_project_path", "get_project_path");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "resource_name"), "set_name", "get_name");
 
 	BIND_VMETHOD(MethodInfo("_setup_local_to_scene"));
