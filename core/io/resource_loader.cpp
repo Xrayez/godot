@@ -713,8 +713,9 @@ String ResourceLoader::_localize_path(const String &p_path, String *r_subproject
 			String base = "://";
 			int basepos = local_path.find(base);
 			String subpath = E->get().plus_file(local_path.right(basepos + base.length()));
-			if (FileAccess::exists(subpath)) {
-				local_path = subpath;
+			String subpath_remapped = path_remap(subpath);
+			if (FileAccess::exists(subpath_remapped)) {
+				local_path = subpath_remapped;
 				if (r_subproject_path) {
 					*r_subproject_path = E->get();
 				}
