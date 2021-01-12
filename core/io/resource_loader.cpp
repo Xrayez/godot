@@ -722,6 +722,17 @@ String ResourceLoader::_localize_path(const String &p_path, String *r_subproject
 				break;
 			}
 		}
+	} else {
+		// The path exists, but is it inside a subproject?
+		if (!r_subproject_path) {
+			return local_path;
+		}
+		for (List<String>::Element *E = subproject_paths.front(); E; E = E->next()) {
+			if (local_path.begins_with(E->get())) {
+				*r_subproject_path = E->get();
+				break;
+			}
+		}
 	}
 	return local_path;
 }
